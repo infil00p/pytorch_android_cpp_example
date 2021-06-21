@@ -21,7 +21,7 @@
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_org_infil00p_pytorch_1mobilenet_MainActivity_startPredict(JNIEnv *env, jobject thiz,
+Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredict(JNIEnv *env, jobject thiz,
                                                                jobject buffer, jint height,
                                                                jint width) {
 
@@ -52,7 +52,7 @@ Java_org_infil00p_pytorch_1mobilenet_MainActivity_startPredict(JNIEnv *env, jobj
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_org_infil00p_pytorch_1mobilenet_MainActivity_startPredictWithTorchVision(JNIEnv *env,
+Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithTorchVision(JNIEnv *env,
                                                                               jobject thiz,
                                                                               jobject buffer) {
     jbyte* buff = (jbyte*)env->GetDirectBufferAddress(buffer);

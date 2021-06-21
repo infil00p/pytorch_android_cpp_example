@@ -21,7 +21,7 @@
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
-std::string APP_PATH = "/data/data/org.infil00p.pytorch_mobilenet/files/mobilenet_v2/model/";
+std::string APP_PATH = "/data/data/com.adobe.pytorch_mobilenet/files/mobilenet_v2/model/";
 
 namespace AdobeExample {
 
