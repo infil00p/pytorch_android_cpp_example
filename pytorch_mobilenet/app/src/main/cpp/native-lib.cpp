@@ -18,6 +18,7 @@
 #include <string>
 
 #include "MobileNet.h"
+#include "MobileNetNHWC.h"
 
 extern "C"
 JNIEXPORT jint JNICALL
@@ -52,18 +53,22 @@ Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredict(JNIEnv *env, jobject
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithTorchVision(JNIEnv *env,
-                                                                              jobject thiz,
-                                                                              jobject buffer) {
+Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithChannelsLast(JNIEnv *env, jobject thiz,
+                                                                            jobject buffer, jint height,
+                                                                            jint width) {
+    // Endianness matters, ARGB8888 in Android Speak is BGRA in reality
     jbyte* buff = (jbyte*)env->GetDirectBufferAddress(buffer);
-    AdobeExample::MobileNet model;
-    std::shared_ptr<std::vector<float> > results = model.predict((float*) buff);
+    cv::Mat rgbaMat(height, width, CV_8UC4, buff);
+    cv::Mat bgrMat;
+    cv::cvtColor(rgbaMat, bgrMat, cv::COLOR_BGRA2BGR);
+    AdobeExample::MobileNetNHWC model;
+    std::shared_ptr<std::vector<float> > results = model.getProbs(bgrMat);
     auto resultVec = *results;
 
     // Process the output from the buffer.
     uint8_t maxValue         = 0;
     int idx                  = -1;
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < resultVec.size(); i++)
     {
         if (resultVec[i] > maxValue)
         {

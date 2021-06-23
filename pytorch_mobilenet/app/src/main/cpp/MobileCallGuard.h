@@ -14,35 +14,27 @@
  ~ limitations under the License.
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#ifndef PYTORCH_MOBILENET_MOBILENET_H
-#define PYTORCH_MOBILENET_MOBILENET_H
-
 #include "torch/script.h"
-#include "opencv2/opencv.hpp"
-#include "MobileCallGuard.h"
+
+#ifndef PYTORCH_MOBILENET_MOBILECALLGUARD_H
+#define PYTORCH_MOBILENET_MOBILECALLGUARD_H
 
 
 namespace AdobeExample {
 
-    class MobileNet {
+    std::string const APP_PATH = "/data/data/com.adobe.pytorch_mobilenet/files/mobilenet_v2/model/";
 
-    public:
-
-        using SharedPtr = std::shared_ptr<std::vector<float> >;
-        MobileNet();
-        SharedPtr predict(cv::Mat & preprocessedData);
-        SharedPtr predict(float * blob);
-        cv::Mat preProcess(cv::Mat & imageBGR, bool nchw);
-        SharedPtr getProbs(cv::Mat & input);
-
-    private:
-        mutable torch::jit::script::Module mModule;
+    struct MobileCallGuard
+    {
+        // AutoGrad is disabled for mobile by default.
+        torch::autograd::AutoGradMode no_autograd_guard{false};
+        // This needs to be on (taken from the test application)
+        torch::AutoNonVariableTypeMode non_var_guard{true};
+        // Disable graph optimizer to ensure list of unused ops are not changed for
+        // custom mobile build.
+        torch::jit::GraphOptimizerEnabledGuard no_optimizer_guard{false};
     };
-
-
-
 }
 
 
-
-#endif //PYTORCH_MOBILENET_MOBILENET_H
+#endif //PYTORCH_MOBILENET_MOBILECALLGUARD_H

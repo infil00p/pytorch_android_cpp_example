@@ -58,13 +58,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     // PyTorch Implementation
-    implementation 'org.pytorch:pytorch_android:1.8.0'
-    extractForNativeBuild 'org.pytorch:pytorch_android:1.8.0'
-
-    //Adding to check pre-processing
-    implementation 'org.pytorch:pytorch_android_torchvision:1.8.0'
-
-
+    implementation 'org.pytorch:pytorch_android:1.9.0'
+    extractForNativeBuild 'org.pytorch:pytorch_android:1.9.0'
 
 }
 

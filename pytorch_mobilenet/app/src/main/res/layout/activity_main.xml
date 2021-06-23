@@ -6,6 +6,8 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
+
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
@@ -37,11 +39,12 @@
         android:text="Do Predict"
         app:layout_constraintHeight_percent="0.10"
         app:layout_constraintTop_toBottomOf="@id/getImage" />
+
     <Button
-        android:id="@+id/doPredictWithPyTorch"
+        android:id="@+id/doPredictWithNHWC"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Predict With TorchVision"
+        android:text="Predict With NHWC"
         app:layout_constraintHeight_percent="0.10"
         app:layout_constraintTop_toBottomOf="@id/doPredict" />
 

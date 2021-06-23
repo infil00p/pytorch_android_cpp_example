@@ -14,22 +14,21 @@
  ~ limitations under the License.
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#ifndef PYTORCH_MOBILENET_MOBILENET_H
-#define PYTORCH_MOBILENET_MOBILENET_H
+#ifndef PYTORCH_MOBILENET_MOBILENETNHWC_H
+#define PYTORCH_MOBILENET_MOBILENETNHWC_H
 
 #include "torch/script.h"
 #include "opencv2/opencv.hpp"
 #include "MobileCallGuard.h"
 
-
 namespace AdobeExample {
 
-    class MobileNet {
+    class MobileNetNHWC {
 
     public:
 
         using SharedPtr = std::shared_ptr<std::vector<float> >;
-        MobileNet();
+        MobileNetNHWC();
         SharedPtr predict(cv::Mat & preprocessedData);
         SharedPtr predict(float * blob);
         cv::Mat preProcess(cv::Mat & imageBGR, bool nchw);
@@ -43,6 +42,4 @@ namespace AdobeExample {
 
 }
 
-
-
-#endif //PYTORCH_MOBILENET_MOBILENET_H
+#endif //PYTORCH_MOBILENET_MOBILENETNHWC_H

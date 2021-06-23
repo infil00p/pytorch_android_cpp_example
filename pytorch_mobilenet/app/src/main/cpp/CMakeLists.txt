@@ -47,7 +47,8 @@ add_library( # Sets the name of the library.
              SHARED
              # Provides a relative path to your source file(s).
              native-lib.cpp
-             MobileNet.cpp)
+             MobileNet.cpp
+        MobileNetNHWC.cpp)
 
 
 find_library( # Sets the name of the path variable.

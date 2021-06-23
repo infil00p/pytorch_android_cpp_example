@@ -14,7 +14,7 @@
  ~ limitations under the License.
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#include "MobileNet.h"
+#include "MobileNetNHWC.h"
 #define LOG_TAG "MobileNet"
 
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
@@ -23,9 +23,7 @@
 
 namespace AdobeExample {
 
-    // We pull the model from the assets directory onto storage for simplicity
-
-    MobileNet::MobileNet() {
+    MobileNetNHWC::MobileNetNHWC() {
         auto qengines = at::globalContext().supportedQEngines();
         if (std::find(qengines.begin(), qengines.end(), at::QEngine::QNNPACK) !=
             qengines.end())
@@ -34,22 +32,22 @@ namespace AdobeExample {
         }
 
         MobileCallGuard guard;
-        mModule = torch::jit::load(APP_PATH + "mobilenet_v2.pt");
+        mModule = torch::jit::load(APP_PATH + "mobilenet_v2_nhwc.pt");
         mModule.eval();
     }
 
     // This is for the OpenCV pre-processing
-    MobileNet::SharedPtr MobileNet::predict(cv::Mat & preprocessedData)
+    MobileNetNHWC::SharedPtr MobileNetNHWC::predict(cv::Mat & preprocessedData)
     {
         return predict((float *)preprocessedData.data);
     }
 
     // For this example, we know what the size is.
-    MobileNet::SharedPtr MobileNet::predict(float * blob) {
+    MobileNetNHWC::SharedPtr MobileNetNHWC::predict(float * blob) {
         auto input = torch::from_blob(
                 blob,
-                torch::IntArrayRef({1, 3, 224, 224}),
-                at::TensorOptions(at::kFloat));
+                torch::IntArrayRef({1, 224, 224, 3}),
+                at::TensorOptions(at::kFloat).memory_format(at::MemoryFormat::ChannelsLast));
         std::vector<torch::jit::IValue> pytorchInputs;
         pytorchInputs.push_back(input);
         auto output = [&]() {
@@ -64,7 +62,7 @@ namespace AdobeExample {
         if (output.tagKind() == "Tensor")
         {
             auto outTensor = output.toTensor();
-            MobileNet::SharedPtr returnVal =
+            MobileNetNHWC::SharedPtr returnVal =
                     std::make_shared<std::vector<float> >(1000, 0);
             auto dataSize = sizeof(float) * 1000;
             memcpy(returnVal->data(), outTensor.data_ptr(), dataSize);
@@ -80,7 +78,7 @@ namespace AdobeExample {
     // This was shamelessly taken from NVIDIA
     // This definitely works on WinML, and this is the C++ version
     // of the OpenCV pre-processing code that I tested on PyTorch on desktop
-    cv::Mat MobileNet::preProcess(cv::Mat & imageBGR, bool nchw) {
+    cv::Mat MobileNetNHWC::preProcess(cv::Mat & imageBGR, bool nchw) {
         int width  = 224;
         int height = 224;
         // Since this is coming from PyTorch, we need to follow PyTorch's
@@ -117,7 +115,7 @@ namespace AdobeExample {
         return preprocessedMat;
     }
 
-    MobileNet::SharedPtr MobileNet::getProbs(cv::Mat &input) {
+    MobileNetNHWC::SharedPtr MobileNetNHWC::getProbs(cv::Mat &input) {
         cv::Mat startMat = preProcess(input, true);
         return predict(startMat);
     }

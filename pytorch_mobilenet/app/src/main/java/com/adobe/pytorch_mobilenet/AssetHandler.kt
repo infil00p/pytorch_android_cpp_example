@@ -93,7 +93,8 @@ class AssetHandler internal constructor(var mCtx: Context) {
         val assetManager = mCtx.assets
         val modelFiles = arrayOf(
             "labels.txt",
-            "mobilenet_v2.pt"
+            "mobilenet_v2.pt",
+            "mobilenet_v2_nhwc.pt"
             )
 
         val mobilenet_V2 = ModelFileInit(

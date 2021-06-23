@@ -28,8 +28,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import java.nio.ByteBuffer
-import org.pytorch.torchvision.TensorImageUtils;
-import java.nio.ByteOrder
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         val button = findViewById<Button>(R.id.getImage)
         val predictButton = findViewById<Button>(R.id.doPredict)
-        val predictWithTorchVision = findViewById<Button>(R.id.doPredictWithPyTorch)
+        val predictNHWC = findViewById<Button>(R.id.doPredictWithNHWC)
         var textView = findViewById<TextView>(R.id.textView)
 
         button.setOnClickListener {
@@ -68,26 +66,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        predictWithTorchVision.setOnClickListener {
+        predictButton.setOnClickListener {
             if(mainBitmap != null) {
-                var width = 224
-                var height = 224
-                var channels = 3
-
+                val byteCount = mainBitmap!!.byteCount
                 // This is critically important, if this is not directly allocated, it will not go
                 // past JNI into C++
-                var byteBuffer : ByteBuffer = ByteBuffer.allocateDirect(width * height * channels * 4);
-                byteBuffer.order(ByteOrder.nativeOrder())
-                var floatBuffer = byteBuffer.asFloatBuffer()
-
-                TensorImageUtils.bitmapToFloatBuffer(mainBitmap, 0, 0, width, height,
-                    TensorImageUtils.TORCHVISION_NORM_MEAN_RGB,
-                    TensorImageUtils.TORCHVISION_NORM_STD_RGB,
-                    floatBuffer, 0)
+                var byteBuffer : ByteBuffer = ByteBuffer.allocateDirect(byteCount)
+                mainBitmap!!.copyPixelsToBuffer(byteBuffer)
 
                 // Our JNI returns an integer
                 var predictVal : Int
-                predictVal = startPredictWithTorchVision(byteBuffer);
+                predictVal = startPredict(byteBuffer, mainBitmap!!.height, mainBitmap!!.width);
 
                 // Grab the result from the string
                 if(predictVal == -1)
@@ -100,7 +89,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        predictButton.setOnClickListener {
+        predictNHWC.setOnClickListener {
             if(mainBitmap != null) {
                 val byteCount = mainBitmap!!.byteCount
                 // This is critically important, if this is not directly allocated, it will not go
@@ -110,7 +99,7 @@ class MainActivity : AppCompatActivity() {
 
                 // Our JNI returns an integer
                 var predictVal : Int
-                predictVal = startPredict(byteBuffer, mainBitmap!!.height, mainBitmap!!.width);
+                predictVal = startPredictWithChannelsLast(byteBuffer, mainBitmap!!.height, mainBitmap!!.width);
 
                 // Grab the result from the string
                 if(predictVal == -1)
@@ -161,6 +150,8 @@ class MainActivity : AppCompatActivity() {
     // We always have some external fun!!!
 
     external fun startPredict(buffer: ByteBuffer, height: Int, width: Int) : Int
+
+    external fun startPredictWithChannelsLast(buffer: ByteBuffer, height: Int, width: Int) : Int
 
     external fun startPredictWithTorchVision(buffer: ByteBuffer) : Int
 
