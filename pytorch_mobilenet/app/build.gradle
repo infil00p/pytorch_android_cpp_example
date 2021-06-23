@@ -61,6 +61,9 @@ dependencies {
     implementation 'org.pytorch:pytorch_android:1.9.0'
     extractForNativeBuild 'org.pytorch:pytorch_android:1.9.0'
 
+    implementation ('org.pytorch:pytorch_android_torchvision:1.9.0') {
+        exclude group: 'org.pytorch', module: 'pytorch_android_lite'
+    }
 }
 
 
