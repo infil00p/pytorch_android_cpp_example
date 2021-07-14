@@ -80,3 +80,29 @@ Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithChannelsLast(JNIE
     // We have the final index,
     return idx;
 }
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithTorchVision(JNIEnv *env,
+                                                                           jobject thiz,
+                                                                           jobject buffer) {
+    jbyte* buff = (jbyte*)env->GetDirectBufferAddress(buffer);
+    AdobeExample::MobileNetNHWC model;
+    std::shared_ptr<std::vector<float> > results = model.predict((float*) buff);
+    auto resultVec = *results;
+
+    // Process the output from the buffer.
+    uint8_t maxValue         = 0;
+    int idx                  = -1;
+    for (int i = 0; i < 1000; i++)
+    {
+        if (resultVec[i] > maxValue)
+        {
+            maxValue = resultVec[i];
+            idx      = i;
+        }
+    }
+
+    // We have the final index,
+    return idx;
+}

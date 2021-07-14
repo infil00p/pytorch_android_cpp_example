@@ -27,7 +27,10 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import org.pytorch.MemoryFormat
+import org.pytorch.torchvision.TensorImageUtils
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 class MainActivity : AppCompatActivity() {
 
@@ -52,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         val button = findViewById<Button>(R.id.getImage)
         val predictButton = findViewById<Button>(R.id.doPredict)
         val predictNHWC = findViewById<Button>(R.id.doPredictWithNHWC)
+        val predictTorchvisionNHWC = findViewById<Button>(R.id.doPredictTorchvisionWithNHWC)
         var textView = findViewById<TextView>(R.id.textView)
 
         button.setOnClickListener {
@@ -111,6 +115,37 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        predictTorchvisionNHWC.setOnClickListener {
+            if(mainBitmap != null) {
+                val byteCount = mainBitmap!!.byteCount
+                // This is critically important, if this is not directly allocated, it will not go
+                // past JNI into C++
+                val width = mainBitmap!!.width
+                val height = mainBitmap!!.height
+                var byteBuffer : ByteBuffer = ByteBuffer.allocateDirect(width * height * 3 * 4);
+                byteBuffer.order(ByteOrder.nativeOrder())
+                var floatBuffer = byteBuffer.asFloatBuffer()
+
+                TensorImageUtils.bitmapToFloatBuffer(mainBitmap, 0, 0, 224, 224,
+                    TensorImageUtils.TORCHVISION_NORM_MEAN_RGB,
+                    TensorImageUtils.TORCHVISION_NORM_STD_RGB,
+                    floatBuffer, 0, MemoryFormat.CHANNELS_LAST)
+
+                // Our JNI returns an integer
+                var predictVal : Int
+                predictVal = startPredictWithTorchVision(byteBuffer)
+
+                // Grab the result from the string
+                if(predictVal == -1)
+                    predictVal = 0
+                val resultString = labels[predictVal]
+                runOnUiThread {
+                    textView.text = resultString
+                    //findObjects.isEnabled = true
+                }
+            }
+        }
     }
 
     override fun onActivityResult(reqCode: Int, resultCode: Int, data: Intent?) {
@@ -154,7 +189,6 @@ class MainActivity : AppCompatActivity() {
     external fun startPredictWithChannelsLast(buffer: ByteBuffer, height: Int, width: Int) : Int
 
     external fun startPredictWithTorchVision(buffer: ByteBuffer) : Int
-
 
 
     companion object {

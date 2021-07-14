@@ -46,9 +46,10 @@ namespace AdobeExample {
 
     // For this example, we know what the size is.
     MobileNet::SharedPtr MobileNet::predict(float * blob) {
+        const auto sizes = std::vector<int64_t>{1, 3, 224, 224};
         auto input = torch::from_blob(
                 blob,
-                torch::IntArrayRef({1, 3, 224, 224}),
+                torch::IntArrayRef(sizes),
                 at::TensorOptions(at::kFloat));
         std::vector<torch::jit::IValue> pytorchInputs;
         pytorchInputs.push_back(input);

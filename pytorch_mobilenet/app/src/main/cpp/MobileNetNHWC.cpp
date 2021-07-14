@@ -32,7 +32,7 @@ namespace AdobeExample {
         }
 
         MobileCallGuard guard;
-        mModule = torch::jit::load(APP_PATH + "mobilenet_v2_nhwc.pt");
+        mModule = torch::jit::load(APP_PATH + "mobilenet_v2.pt");
         mModule.eval();
     }
 
@@ -44,10 +44,13 @@ namespace AdobeExample {
 
     // For this example, we know what the size is.
     MobileNetNHWC::SharedPtr MobileNetNHWC::predict(float * blob) {
+        const auto sizes = std::vector<int64_t>{1, 3, 224, 224};
         auto input = torch::from_blob(
                 blob,
-                torch::IntArrayRef({1, 224, 224, 3}),
-                at::TensorOptions(at::kFloat).memory_format(at::MemoryFormat::ChannelsLast));
+                torch::IntArrayRef(sizes),
+                torch::IntArrayRef(c10::get_channels_last_strides_2d(sizes)),
+                at::TensorOptions(at::kFloat)
+                        .memory_format(at::MemoryFormat::ChannelsLast));
         std::vector<torch::jit::IValue> pytorchInputs;
         pytorchInputs.push_back(input);
         auto output = [&]() {
@@ -116,7 +119,7 @@ namespace AdobeExample {
     }
 
     MobileNetNHWC::SharedPtr MobileNetNHWC::getProbs(cv::Mat &input) {
-        cv::Mat startMat = preProcess(input, true);
+        cv::Mat startMat = preProcess(input, false);
         return predict(startMat);
     }
 }
