@@ -19,6 +19,8 @@
 
 #include "MobileNet.h"
 #include "MobileNetNHWC.h"
+#include "MobileNetGPU.h"
+#include "MobileNetGPUNHWC.h"
 
 extern "C"
 JNIEXPORT jint JNICALL
@@ -81,6 +83,38 @@ Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithChannelsLast(JNIE
     return idx;
 }
 
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithGPU(JNIEnv *env, jobject thiz,
+                                                                            jobject buffer, jint height,
+                                                                            jint width) {
+    // Endianness matters, ARGB8888 in Android Speak is BGRA in reality
+    jbyte* buff = (jbyte*)env->GetDirectBufferAddress(buffer);
+    cv::Mat rgbaMat(height, width, CV_8UC4, buff);
+    cv::Mat bgrMat;
+    cv::cvtColor(rgbaMat, bgrMat, cv::COLOR_BGRA2BGR);
+    AdobeExample::MobileNetGPU model;
+    std::shared_ptr<std::vector<float> > results = model.getProbs(bgrMat);
+    auto resultVec = *results;
+
+    // Process the output from the buffer.
+    uint8_t maxValue         = 0;
+    int idx                  = -1;
+    for (int i = 0; i < resultVec.size(); i++)
+    {
+        if (resultVec[i] > maxValue)
+        {
+            maxValue = resultVec[i];
+            idx      = i;
+        }
+    }
+
+    // We have the final index,
+    return idx;
+}
+
+
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithTorchVision(JNIEnv *env,
@@ -95,6 +129,36 @@ Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithTorchVision(JNIEn
     uint8_t maxValue         = 0;
     int idx                  = -1;
     for (int i = 0; i < 1000; i++)
+    {
+        if (resultVec[i] > maxValue)
+        {
+            maxValue = resultVec[i];
+            idx      = i;
+        }
+    }
+
+    // We have the final index,
+    return idx;
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_adobe_pytorch_1mobilenet_MainActivity_startPredictWithGPUNHWC(JNIEnv *env, jobject thiz,
+                                                                       jobject buffer, jint height,
+                                                                       jint width) {
+// Endianness matters, ARGB8888 in Android Speak is BGRA in reality
+    jbyte* buff = (jbyte*)env->GetDirectBufferAddress(buffer);
+    cv::Mat rgbaMat(height, width, CV_8UC4, buff);
+    cv::Mat bgrMat;
+    cv::cvtColor(rgbaMat, bgrMat, cv::COLOR_BGRA2BGR);
+    AdobeExample::MobileNetGPUNHWC model;
+    std::shared_ptr<std::vector<float> > results = model.getProbs(bgrMat);
+    auto resultVec = *results;
+
+    // Process the output from the buffer.
+    uint8_t maxValue         = 0;
+    int idx                  = -1;
+    for (int i = 0; i < resultVec.size(); i++)
     {
         if (resultVec[i] > maxValue)
         {

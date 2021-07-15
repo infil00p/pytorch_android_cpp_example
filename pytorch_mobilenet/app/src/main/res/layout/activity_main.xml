@@ -56,4 +56,20 @@
         app:layout_constraintHeight_percent="0.10"
         app:layout_constraintTop_toBottomOf="@id/doPredictWithNHWC" />
 
+    <Button
+        android:id="@+id/doPredictWithGPU"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Predict With GPU"
+        app:layout_constraintHeight_percent="0.10"
+        app:layout_constraintTop_toBottomOf="@id/doPredictTorchvisionWithNHWC" />
+
+    <Button
+        android:id="@+id/doPredictWithGPUNHWC"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Predict With GPU + NHWC"
+        app:layout_constraintHeight_percent="0.10"
+        app:layout_constraintTop_toBottomOf="@id/doPredictWithGPU" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

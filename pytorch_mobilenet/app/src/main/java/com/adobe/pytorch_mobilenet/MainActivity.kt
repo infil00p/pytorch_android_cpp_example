@@ -56,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         val predictButton = findViewById<Button>(R.id.doPredict)
         val predictNHWC = findViewById<Button>(R.id.doPredictWithNHWC)
         val predictTorchvisionNHWC = findViewById<Button>(R.id.doPredictTorchvisionWithNHWC)
+        val predictGPU = findViewById<Button>(R.id.doPredictWithGPU)
+        val predictGPUNHWC = findViewById<Button>(R.id.doPredictWithGPUNHWC)
         var textView = findViewById<TextView>(R.id.textView)
 
         button.setOnClickListener {
@@ -104,6 +106,52 @@ class MainActivity : AppCompatActivity() {
                 // Our JNI returns an integer
                 var predictVal : Int
                 predictVal = startPredictWithChannelsLast(byteBuffer, mainBitmap!!.height, mainBitmap!!.width);
+
+                // Grab the result from the string
+                if(predictVal == -1)
+                    predictVal = 0
+                val resultString = labels[predictVal]
+                runOnUiThread {
+                    textView.text = resultString
+                    //findObjects.isEnabled = true
+                }
+            }
+        }
+
+        predictGPU.setOnClickListener {
+            if(mainBitmap != null) {
+                val byteCount = mainBitmap!!.byteCount
+                // This is critically important, if this is not directly allocated, it will not go
+                // past JNI into C++
+                var byteBuffer : ByteBuffer = ByteBuffer.allocateDirect(byteCount)
+                mainBitmap!!.copyPixelsToBuffer(byteBuffer)
+
+                // Our JNI returns an integer
+                var predictVal : Int
+                predictVal = startPredictWithGPU(byteBuffer, mainBitmap!!.height, mainBitmap!!.width);
+
+                // Grab the result from the string
+                if(predictVal == -1)
+                    predictVal = 0
+                val resultString = labels[predictVal]
+                runOnUiThread {
+                    textView.text = resultString
+                    //findObjects.isEnabled = true
+                }
+            }
+        }
+
+        predictGPUNHWC.setOnClickListener {
+            if(mainBitmap != null) {
+                val byteCount = mainBitmap!!.byteCount
+                // This is critically important, if this is not directly allocated, it will not go
+                // past JNI into C++
+                var byteBuffer : ByteBuffer = ByteBuffer.allocateDirect(byteCount)
+                mainBitmap!!.copyPixelsToBuffer(byteBuffer)
+
+                // Our JNI returns an integer
+                var predictVal : Int
+                predictVal = startPredictWithGPU(byteBuffer, mainBitmap!!.height, mainBitmap!!.width);
 
                 // Grab the result from the string
                 if(predictVal == -1)
@@ -187,6 +235,10 @@ class MainActivity : AppCompatActivity() {
     external fun startPredict(buffer: ByteBuffer, height: Int, width: Int) : Int
 
     external fun startPredictWithChannelsLast(buffer: ByteBuffer, height: Int, width: Int) : Int
+
+    external fun startPredictWithGPU(buffer: ByteBuffer, height: Int, width: Int) : Int
+
+    external fun startPredictWithGPUNHWC(buffer: ByteBuffer, height: Int, width: Int) : Int
 
     external fun startPredictWithTorchVision(buffer: ByteBuffer) : Int
 

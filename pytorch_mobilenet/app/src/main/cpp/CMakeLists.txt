@@ -48,7 +48,9 @@ add_library( # Sets the name of the library.
              # Provides a relative path to your source file(s).
              native-lib.cpp
              MobileNet.cpp
-        MobileNetNHWC.cpp)
+             MobileNetNHWC.cpp
+             MobileNetGPU.cpp
+             MobileNetGPUNHWC.cpp)
 
 
 find_library( # Sets the name of the path variable.

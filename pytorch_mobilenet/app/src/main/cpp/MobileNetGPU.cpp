@@ -14,7 +14,7 @@
  ~ limitations under the License.
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#include "MobileNetNHWC.h"
+#include "MobileNetGPU.h"
 #define LOG_TAG "MobileNet"
 
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
@@ -23,7 +23,9 @@
 
 namespace AdobeExample {
 
-    MobileNetNHWC::MobileNetNHWC() {
+    // We pull the model from the assets directory onto storage for simplicity
+
+    MobileNetGPU::MobileNetGPU() {
         auto qengines = at::globalContext().supportedQEngines();
         if (std::find(qengines.begin(), qengines.end(), at::QEngine::QNNPACK) !=
             qengines.end())
@@ -32,28 +34,35 @@ namespace AdobeExample {
         }
 
         MobileCallGuard guard;
-        mModule = torch::jit::load(APP_PATH + "mobilenet_v2_nhwc.pt");
+        mModule = torch::jit::load(APP_PATH + "mobilenet_v2_vulkan_nchw.pt");
         mModule.eval();
     }
 
     // This is for the OpenCV pre-processing
-    MobileNetNHWC::SharedPtr MobileNetNHWC::predict(cv::Mat & preprocessedData)
+    MobileNetGPU::SharedPtr MobileNetGPU::predict(cv::Mat & preprocessedData)
     {
         return predict((float *)preprocessedData.data);
     }
 
     // For this example, we know what the size is.
-    MobileNetNHWC::SharedPtr MobileNetNHWC::predict(float * blob) {
+    MobileNetGPU::SharedPtr MobileNetGPU::predict(float * blob) {
         const auto sizes = std::vector<int64_t>{1, 3, 224, 224};
-        auto stride_arr = c10::get_channels_last_strides_2d(sizes);
         auto input = torch::from_blob(
                 blob,
                 torch::IntArrayRef(sizes),
-                torch::IntArrayRef(stride_arr),
-                at::TensorOptions(at::kFloat)
-                        .memory_format(at::MemoryFormat::ChannelsLast));
+                at::TensorOptions(at::kFloat));
         std::vector<torch::jit::IValue> pytorchInputs;
-        pytorchInputs.push_back(input);
+        
+        if(at::is_vulkan_available())
+        {
+            auto gpuInputTensor = input.vulkan();
+            pytorchInputs.push_back(gpuInputTensor);
+        }
+        else
+        {
+            pytorchInputs.push_back(input);
+        }
+
         auto output = [&]() {
             MobileCallGuard guard;
 
@@ -66,7 +75,7 @@ namespace AdobeExample {
         if (output.tagKind() == "Tensor")
         {
             auto outTensor = output.toTensor();
-            MobileNetNHWC::SharedPtr returnVal =
+            MobileNetGPU::SharedPtr returnVal =
                     std::make_shared<std::vector<float> >(1000, 0);
             auto dataSize = sizeof(float) * 1000;
             memcpy(returnVal->data(), outTensor.data_ptr(), dataSize);
@@ -82,7 +91,7 @@ namespace AdobeExample {
     // This was shamelessly taken from NVIDIA
     // This definitely works on WinML, and this is the C++ version
     // of the OpenCV pre-processing code that I tested on PyTorch on desktop
-    cv::Mat MobileNetNHWC::preProcess(cv::Mat & imageBGR, bool nchw) {
+    cv::Mat MobileNetGPU::preProcess(cv::Mat & imageBGR, bool nchw) {
         int width  = 224;
         int height = 224;
         // Since this is coming from PyTorch, we need to follow PyTorch's
@@ -119,8 +128,8 @@ namespace AdobeExample {
         return preprocessedMat;
     }
 
-    MobileNetNHWC::SharedPtr MobileNetNHWC::getProbs(cv::Mat &input) {
-        cv::Mat startMat = preProcess(input, false);
+    MobileNetGPU::SharedPtr MobileNetGPU::getProbs(cv::Mat &input) {
+        cv::Mat startMat = preProcess(input, true);
         return predict(startMat);
     }
 }
