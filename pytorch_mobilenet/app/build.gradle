@@ -48,6 +48,7 @@ android {
 
 dependencies {
 
+    // DO NOT TOUCH THIS IF YOU WANT IT TO STILL WORK
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.2.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
@@ -58,10 +59,10 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     // PyTorch Implementation
-    implementation 'org.pytorch:pytorch_android:1.9.0'
-    extractForNativeBuild 'org.pytorch:pytorch_android:1.9.0'
+    implementation 'org.pytorch:pytorch_android:1.12.2'
+    extractForNativeBuild 'org.pytorch:pytorch_android:1.12.2'
 
-    implementation ('org.pytorch:pytorch_android_torchvision:1.9.0') {
+    implementation ('org.pytorch:pytorch_android_torchvision:1.12.2') {
         exclude group: 'org.pytorch', module: 'pytorch_android_lite'
     }
 }
