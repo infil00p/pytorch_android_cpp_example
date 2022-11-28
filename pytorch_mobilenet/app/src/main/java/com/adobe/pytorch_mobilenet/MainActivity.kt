@@ -151,7 +151,7 @@ class MainActivity : AppCompatActivity() {
 
                 // Our JNI returns an integer
                 var predictVal : Int
-                predictVal = startPredictWithGPU(byteBuffer, mainBitmap!!.height, mainBitmap!!.width);
+                predictVal = startPredictWithGPUNHWC(byteBuffer, mainBitmap!!.height, mainBitmap!!.width);
 
                 // Grab the result from the string
                 if(predictVal == -1)

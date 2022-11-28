@@ -55,7 +55,8 @@ namespace AdobeExample {
 
         std::vector<torch::jit::IValue> pytorchInputs;
 
-        if(at::is_vulkan_available())
+        bool isVulkan = at::is_vulkan_available();
+        if(isVulkan)
         {
             auto gpuInputTensor = input.vulkan();
             pytorchInputs.push_back(gpuInputTensor);
@@ -76,7 +77,17 @@ namespace AdobeExample {
         // in bytes of the tensor array.  (We don't always know this)
         if (output.tagKind() == "Tensor")
         {
-            auto outTensor = output.toTensor();
+            auto tmpTensor = output.toTensor();
+            at::Tensor outTensor;
+            // This was crashing earlier, this is an API change between 1.9 and 1.12.1
+            if(isVulkan)
+            {
+                outTensor = tmpTensor.cpu();
+            }
+            else
+            {
+                outTensor = tmpTensor;
+            }
             MobileNetGPUNHWC::SharedPtr returnVal =
                     std::make_shared<std::vector<float> >(1000, 0);
             auto dataSize = sizeof(float) * 1000;
